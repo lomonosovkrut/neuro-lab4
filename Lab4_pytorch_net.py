@@ -1,7 +1,6 @@
 import pandas as pd
 import torch
 import torch.nn as nn
-from sklearn.preprocessing import StandardScaler
 
 # Значение n из ЭИОС
 n = 17
@@ -15,10 +14,15 @@ if n % 2 == 1:
     X = df.iloc[:, 0:2].values  # Первые два столбца: возраст и доход
     y = df.iloc[:, 2].values.reshape(-1, 1)  # Третий столбец: класс ("купит" или "не купит")
 
-    # Нормализация данных
-    scaler = StandardScaler()
-    X = torch.Tensor(scaler.fit_transform(X))
-    y = torch.Tensor(y)
+    # Преобразование меток классов в числовые значения (1 - "купит", 0 - "не купит")
+    y = (y == "купит").astype(float)
+
+    # Нормализация данных 
+    mean_X = X.mean(axis=0)  # Среднее значение по каждому признаку
+    std_X = X.std(axis=0)    # Стандартное отклонение по каждому признаку
+    X = (X - mean_X) / std_X  # Стандартизация данных
+    X = torch.Tensor(X)       # Преобразование в тензор PyTorch
+    y = torch.Tensor(y)       # Преобразование меток в тензор PyTorch
 
     # Определение архитектуры нейронной сети для классификации
     class NNet(nn.Module):
@@ -73,10 +77,12 @@ else:
     X = df.iloc[:, 0].values.reshape(-1, 1)  # Первый столбец: возраст
     y = df.iloc[:, 1].values.reshape(-1, 1)  # Второй столбец: доход
 
-    # Нормализация данных
-    scaler = StandardScaler()
-    X = torch.Tensor(scaler.fit_transform(X))
-    y = torch.Tensor(y)
+    # Нормализация данных 
+    mean_X = X.mean(axis=0)  # Среднее значение по каждому признаку
+    std_X = X.std(axis=0)    # Стандартное отклонение по каждому признаку
+    X = (X - mean_X) / std_X  # Стандартизация данных
+    X = torch.Tensor(X)       # Преобразование в тензор PyTorch
+    y = torch.Tensor(y)       # Преобразование меток в тензор PyTorch
 
     # Определение архитектуры нейронной сети для регрессии
     class NNetRegression(nn.Module):
@@ -119,4 +125,4 @@ else:
     with torch.no_grad():
         pred = net(X)
         mae = torch.mean(torch.abs(y - pred)).item()
-        print(f'ошибка (MAE): {mae:.2f}')
+        print(f'Ошибка (MAE): {mae:.2f}')
